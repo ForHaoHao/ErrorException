@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -25,6 +26,10 @@ namespace ErrorException
             }
             catch (Exception ex)
             {
+                var options = new JsonSerializerOptions
+                {
+                    Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                };
                 if (ex is AppException appEx)
                 {
                     context.Response.StatusCode = appEx.HttpCode;
@@ -34,7 +39,9 @@ namespace ErrorException
                         Message = appEx.MessageTitle,
                         DetailMessage = appEx.Message
                     };
-                    await context.Response.WriteAsync(JsonSerializer.Serialize(errorResponse));
+
+                    var json = JsonSerializer.Serialize(errorResponse, options);
+                    await context.Response.WriteAsync(json);
                 }
                 else
                 {
@@ -45,7 +52,9 @@ namespace ErrorException
                         Message = "伺服器內部錯誤",
                         DetailMessage = ex.Message
                     };
-                    await context.Response.WriteAsync(JsonSerializer.Serialize(errorResponse));
+
+                    var json = JsonSerializer.Serialize(errorResponse, options);
+                    await context.Response.WriteAsync(json);
                 }
             }
         }
